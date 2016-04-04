@@ -118,11 +118,12 @@ class GobbleBot(metaclass=Singleton):
                 message = Message(event)
                 LOGGER.info("Found respondable message %s, looking for matches..." % message.text)
                 for matcher in RESPONSE_REGISTRY.keys():
-                    if matcher.match(message.text) is not None:
+                    matches = matcher.match(message.text)
+                    if matches is not None:
                         LOGGER.info("Message matched: %s" % matcher)
                         try:
                             func = RESPONSE_REGISTRY[matcher]
-                            func(message)
+                            func(message, matches.groups())
                         except:
                             LOGGER.exception('failed to handle message %s with plugin "%s"', message.text, func.__name__)
                 #self.client.api_call("chat.postMessage", channel=event['channel'], text="Message was: %s" % event['text'], as_user=True)
