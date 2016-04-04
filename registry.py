@@ -1,0 +1,2 @@
+
+RESPONSE_REGISTRY = {}
