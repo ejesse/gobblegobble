@@ -140,6 +140,11 @@ class GobbleBot(metaclass=Singleton):
         for matcher in matchers:
             if message['text'].lower().startswith(matcher.lower()):
                 return True
+        # karma gets special treatment
+        wildcards = ["++", "--", "—"]
+        for wildcard in wildcards:
+            if message['text'].lower().find(wildcard) > 0:
+                return True
         return False
 
     def is_explicit_at(self, message):
@@ -198,6 +203,8 @@ class Message():
         bot = GobbleBot()
         if self.full_text.startswith("%s " % (bot.bot_name)):
             self.text = self.full_text[len(bot.bot_name)+1:]
+        else:
+            self.text = self.full_text
 
     def reply(self, reply_text):
         """
