@@ -112,20 +112,20 @@ class GobbleBot(metaclass=Singleton):
                 time.sleep(1)
 
     def handle_event(self, event):
-        # throw away anything not a message
-        if event['type'] == 'message':
-            if self.is_message_respondable(event):
-                message = Message(event)
-                LOGGER.info("Found respondable message %s, looking for matches..." % message.text)
-                for matcher in RESPONSE_REGISTRY.keys():
-                    matches = matcher.match(message.text)
-                    if matches is not None:
-                        LOGGER.info("Message matched: %s" % matcher)
-                        try:
+        try:
+            # throw away anything not a message
+            if event['type'] == 'message':
+                if self.is_message_respondable(event):
+                    message = Message(event)
+                    LOGGER.info("Found respondable message %s, looking for matches..." % message.text)
+                    for matcher in RESPONSE_REGISTRY.keys():
+                        matches = matcher.match(message.text)
+                        if matches is not None:
+                            LOGGER.info("Message matched: %s" % matcher)
                             func = RESPONSE_REGISTRY[matcher]
-                            func(message, matches.groups())
-                        except:
-                            LOGGER.exception('failed to handle message %s with plugin "%s"', message.text, func.__name__)
+                            func(message, *matches.groups())
+        except:
+            LOGGER.exception("failed to handle RTM event %s" % event)
                 #self.client.api_call("chat.postMessage", channel=event['channel'], text="Message was: %s" % event['text'], as_user=True)
 
     def is_message_respondable(self, message):
