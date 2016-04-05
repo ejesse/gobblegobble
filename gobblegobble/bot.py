@@ -132,6 +132,9 @@ class GobbleBot(metaclass=Singleton):
         matchers = ["%s " % self.bot_name, "<@%s>" % self.bot_id]
         # make extra sure we do not reply infinite loop
         # so ignore everything where the bot is the user
+        if 'hidden' in message:
+            if message['hidden']:
+                return False
         if message['user'] == self.bot_id:
             return False
         for matcher in matchers:

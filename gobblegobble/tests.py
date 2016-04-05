@@ -54,6 +54,7 @@ class TestGobbleBot(TestCase):
         self.assertFalse(bot.is_message_respondable(ignorable_message))
         self.assertFalse(bot.is_message_respondable(self_message))
         self.assertFalse(bot.is_message_respondable(at_self_message))
+        self.assertFalse(bot.is_message_respondable({'type':'message','hidden':True}))
 
     def test_is_explicit_at(self):
         bot = GobbleBot(api_token='faketoken')
