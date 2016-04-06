@@ -7,6 +7,21 @@ def hi(message):
     message.respond("Hello <@%s>" % message.sender)
 
 
+@gobble_listen('good morning')
+def good_morning(message):
+    message.respond("Good morning <@%s>" % message.sender)
+
+
+@gobble_listen('good afternoon')
+def good_afternoon(message):
+    message.respond("Good afternoon <@%s>" % message.sender)
+
+
+@gobble_listen('good evening')
+def good_evening(message):
+    message.respond("Good evening <@%s>" % message.sender)
+
+
 @gobble_listen('ping')
 def ping(message):
     message.respond('pong')
