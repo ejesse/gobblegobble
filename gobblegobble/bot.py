@@ -196,7 +196,9 @@ class Message():
         self.channel = message_dict['channel']
         if 'ts' in message_dict:
             self.timestamp = message_dict['ts']
-        self.team = message_dict['team']
+        self.team = None
+        if 'team' in message_dict:
+            self.team = message_dict['team']
 
         # since this is a bot we're going to strip out
         # the bot trigger from "text even tho strictly
