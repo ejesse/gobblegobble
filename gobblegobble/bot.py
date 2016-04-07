@@ -201,7 +201,7 @@ class Message():
         # it was in the text, see full_text for that content
         self.full_text = message_dict['text']
         bot = GobbleBot()
-        if self.full_text.startswith("%s " % (bot.bot_name)):
+        if self.full_text.lower().startswith("%s " % (bot.bot_name.lower())):
             self.text = self.full_text[len(bot.bot_name)+1:]
         else:
             self.text = self.full_text

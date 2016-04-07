@@ -93,6 +93,12 @@ class TestSlackMessage(TestCase):
         self.assertEqual(message.timestamp, message_dict['ts'])
         self.assertTrue(message.sent)
 
+    def test_it_strips_bot_name_ignoring_case(self):
+        bot = GobbleBot(api_token='faketoken')
+        message_dict = {'type': 'message', 'team': 'TFAKE123', 'user': 'UFAKE123', 'text': '%s test' % bot.bot_name.upper(), 'channel': 'CFAKE123', 'ts': '1459618786.000032'}
+        message = Message(message_dict)
+        self.assertEqual(message.text, 'test')
+
     def test_it_parses_json_too(self):
         bot = GobbleBot(api_token='faketoken')
         message_dict = {'type': 'message', 'team': 'TFAKE123', 'user': 'UFAKE123', 'text': '%s test' % bot.bot_name, 'channel': 'CFAKE123', 'ts': '1459618786.000032'}
