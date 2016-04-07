@@ -140,8 +140,10 @@ class GobbleBot(metaclass=Singleton):
         for matcher in matchers:
             if message['text'].lower().startswith(matcher.lower()):
                 return True
-        # karma gets special treatment
-        wildcards = ["++", "--", "—"]
+        try:
+            wildcards = settings.GOBBLE_BOT_ALIASES
+        except AttributeError:
+            wildcards = []
         for wildcard in wildcards:
             if message['text'].lower().find(wildcard) > 0:
                 return True
