@@ -11,6 +11,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from slackclient import SlackClient
+from websocket._exceptions import WebSocketConnectionClosedException
 
 from gobblegobble.exceptions import GobbleError
 from gobblegobble.mock_slackclient import MockSlackClient
@@ -106,10 +107,17 @@ class GobbleBot(metaclass=Singleton):
     def listen(self):
         if self.client.rtm_connect():
             while True:
-                for event in self.client.rtm_read():
-                    LOGGER.debug('New event from RTM: %s' % event)
-                    self.handle_event(event)
-                time.sleep(1)
+                try:
+                    for event in self.client.rtm_read():
+                        LOGGER.debug('New event from RTM: %s' % event)
+                        self.handle_event(event)
+                    time.sleep(1)
+                except WebSocketConnectionClosedException:
+                    # sometimes the connection gets closed
+                    # give it 10 seconds and try to reconnect
+                    LOGGER.warn("Lost connection to Slack, attempting to reconnect in 10 seconds")
+                    time.sleep(10)
+                    self.listen()
 
     def handle_event(self, event):
         try:
