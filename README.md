@@ -14,7 +14,7 @@ Requires Django 9.x, python 3.5 (probably? 2.7 might work???)
 
 3. Add your Slack API KEY to your settings:
 
-```SLACKBOT_API_TOKEN = 'yoursecrretapitoken'```
+    ```SLACKBOT_API_TOKEN = 'yoursecrretapitoken'```
 
 4. Run any Django command (manage.py shell or runserver) and the bot will start.
 
@@ -22,11 +22,11 @@ Requires Django 9.x, python 3.5 (probably? 2.7 might work???)
 
 6. There are some basic built-in commands, note replace BOT_NAME with the name of your bot from step 3:
 
-```BOT_NAME hello```
+    ```BOT_NAME hello```
 
-```BOT_NAME hi```
+    ```BOT_NAME hi```
 
-```BOT_NAME ping```
+    ```BOT_NAME ping```
 
 At this point you are up and running. The bot only uses the RTM API and therefore requires no webhooks or exposed webserver.
 
