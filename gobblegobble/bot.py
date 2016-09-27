@@ -115,23 +115,26 @@ class GobbleBot(metaclass=Singleton):
                 except WebSocketConnectionClosedException:
                     # sometimes the connection gets closed
                     # give it 10 seconds and try to reconnect
-                    LOGGER.warn("Lost connection to Slack, attempting to reconnect in 10 seconds")
+                    LOGGER.warning("Lost connection to Slack, attempting to reconnect in 10 seconds")
                     time.sleep(10)
                     self.listen()
 
     def handle_event(self, event):
         try:
             # throw away anything not a message
-            if event['type'] == 'message':
-                if self.is_message_respondable(event):
-                    message = Message(event)
-                    LOGGER.info("Found respondable message %s, looking for matches..." % message.text)
-                    for matcher in RESPONSE_REGISTRY.keys():
-                        matches = matcher.match(message.text)
-                        if matches is not None:
-                            LOGGER.info("Message matched: %s" % matcher)
-                            func = RESPONSE_REGISTRY[matcher]
-                            func(message, *matches.groups())
+            if 'type' in event:
+                if event['type'] == 'message':
+                    if self.is_message_respondable(event):
+                        message = Message(event)
+                        LOGGER.info("Found respondable message %s, looking for matches..." % message.text)
+                        for matcher in RESPONSE_REGISTRY.keys():
+                            matches = matcher.match(message.text)
+                            if matches is not None:
+                                LOGGER.info("Message matched: %s" % matcher)
+                                func = RESPONSE_REGISTRY[matcher]
+                                func(message, *matches.groups())
+            else:
+                LOGGER.debug("Got an event from slack with no type??? Got: %s" % (event))
         except:
             LOGGER.exception("failed to handle RTM event %s" % event)
                 #self.client.api_call("chat.postMessage", channel=event['channel'], text="Message was: %s" % event['text'], as_user=True)
