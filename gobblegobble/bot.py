@@ -112,10 +112,16 @@ class GobbleBot(metaclass=Singleton):
                         LOGGER.debug('New event from RTM: %s' % event)
                         self.handle_event(event)
                     time.sleep(1)
-                except WebSocketConnectionClosedException:
+                except WebSocketConnectionClosedException as wsce:
                     # sometimes the connection gets closed
                     # give it 10 seconds and try to reconnect
-                    LOGGER.warning("Lost connection to Slack, attempting to reconnect in 10 seconds")
+                    LOGGER.warning("WebSocketConnectionClosedException, attempting to reconnect in 10 seconds")
+                    time.sleep(10)
+                    self.listen()
+                except BrokenPipeError:
+                    import traceback
+                    traceback.print_exc()
+                    LOGGER.warning("BrokenPipeError, trying to reconnect in 10 seconds...")
                     time.sleep(10)
                     self.listen()
 
