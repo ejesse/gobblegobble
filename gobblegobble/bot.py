@@ -156,8 +156,9 @@ class GobbleBot(metaclass=Singleton):
         if 'hidden' in message:
             if message['hidden']:
                 return False
-        if message['user'] == self.bot_id:
-            return False
+        if 'user' in message:
+            if message['user'] == self.bot_id:
+                return False
         for matcher in matchers:
             if message['text'].lower().startswith(matcher.lower()):
                 return True
