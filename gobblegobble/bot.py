@@ -2,17 +2,19 @@ import importlib
 import json
 import logging
 import pkgutil
+import random
 import re
 import sys
 from threading import Thread
 import time
+import traceback
+
+from slackclient import SlackClient
+from websocket._exceptions import WebSocketConnectionClosedException
 
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from slackclient import SlackClient
-from websocket._exceptions import WebSocketConnectionClosedException
-
 from gobblegobble.exceptions import GobbleError
 from gobblegobble.mock_slackclient import MockSlackClient
 from gobblegobble.registry import RESPONSE_REGISTRY
@@ -104,26 +106,28 @@ class GobbleBot(metaclass=Singleton):
         else:
             LOGGER.error("Failed test connection to Slack RTM")
 
-    def listen(self):
+    def listen(self, retry_number=0):
+        if retry_number > 0:
+            # backoff retries, max of 5 minute intervals
+            timetosleep = min(300, (2 ** retry_number)) + (random.randint(0,1000) / 1000.0)
+            LOGGER.error("Attempting reconnection to slack in %s seconds, retry number %s" % (timetosleep, retry_number))
+            time.sleep(timetosleep)
+        retry_number = retry_number+1
         if self.client.rtm_connect():
+            # reset it if we connected successfully
+            retry_number = 0
             while True:
                 try:
                     for event in self.client.rtm_read():
                         LOGGER.debug('New event from RTM: %s' % event)
                         self.handle_event(event)
                     time.sleep(1)
-                except WebSocketConnectionClosedException as wsce:
-                    # sometimes the connection gets closed
-                    # give it 10 seconds and try to reconnect
-                    LOGGER.warning("WebSocketConnectionClosedException, attempting to reconnect in 10 seconds")
-                    time.sleep(10)
-                    self.listen()
-                except BrokenPipeError:
-                    import traceback
+                except:
                     traceback.print_exc()
-                    LOGGER.warning("BrokenPipeError, trying to reconnect in 10 seconds...")
-                    time.sleep(10)
-                    self.listen()
+                    LOGGER.error("Connection lost due to above error, trying to reconnect...")
+                    self.listen(retry_number=retry_number)
+        else:
+            self.listen(retry_number=retry_number)
 
     def handle_event(self, event):
         try:
