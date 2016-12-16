@@ -116,6 +116,7 @@ class GobbleBot(metaclass=Singleton):
         if self.client.rtm_connect():
             # reset it if we connected successfully
             retry_number = 0
+            LOGGER.warn("Connected to Slack RTM")
             while True:
                 try:
                     for event in self.client.rtm_read():
