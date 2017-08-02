@@ -106,7 +106,7 @@ class GobbleBot(metaclass=Singleton):
         else:
             LOGGER.error("Failed test connection to Slack RTM")
 
-    def listen(self, retry_number=0):
+    def listen(self, retry_number=0, sleep_interval=settings.BOT_LOOP_SLEEP_TIME):
         if retry_number > 0:
             # backoff retries, max of 5 minute intervals
             timetosleep = min(300, (2 ** retry_number)) + (random.randint(0,1000) / 1000.0)
@@ -122,7 +122,7 @@ class GobbleBot(metaclass=Singleton):
                     for event in self.client.rtm_read():
                         LOGGER.debug('New event from RTM: %s' % event)
                         self.handle_event(event)
-                    time.sleep(1)
+                    time.sleep(sleep_interval)
                 except:
                     traceback.print_exc()
                     LOGGER.error("Connection lost due to above error, trying to reconnect...")
