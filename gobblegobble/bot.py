@@ -135,7 +135,7 @@ class GobbleBot(metaclass=Singleton):
             # throw away anything not a message
             if 'type' in event:
                 if event['type'] == 'message':
-                    if self.is_message_respondable(event):
+                    if GobbleBot.is_message_respondable(event, self.bot_name, self.bot_id):
                         message = Message(event)
                         LOGGER.info("Found respondable message %s, looking for matches..." % message.text)
                         for matcher in RESPONSE_REGISTRY.keys():
@@ -149,28 +149,6 @@ class GobbleBot(metaclass=Singleton):
         except:
             LOGGER.exception("failed to handle RTM event %s" % event)
                 #self.client.api_call("chat.postMessage", channel=event['channel'], text="Message was: %s" % event['text'], as_user=True)
-
-    def is_message_respondable(self, message):
-        matchers = ["%s " % self.bot_name, "<@%s>" % self.bot_id]
-        # make extra sure we do not reply infinite loop
-        # so ignore everything where the bot is the user
-        if 'hidden' in message:
-            if message['hidden']:
-                return False
-        if 'user' in message:
-            if message['user'] == self.bot_id:
-                return False
-        for matcher in matchers:
-            if message['text'].lower().startswith(matcher.lower()):
-                return True
-        try:
-            wildcards = settings.GOBBLE_BOT_ALIASES
-        except AttributeError:
-            wildcards = []
-        for wildcard in wildcards:
-            if message['text'].lower().find(wildcard) > 0:
-                return True
-        return False
 
     def is_explicit_at(self, message):
         if message['text'].lower().startswith("<@%s>" % self.bot_id.lower()):
@@ -191,6 +169,29 @@ class GobbleBot(metaclass=Singleton):
         m.channel = channel
         m.full_text = message
         return self.send_message(m)
+
+    @staticmethod
+    def is_message_respondable(message, bot_name, bot_id):
+        matchers = ["%s " % bot_name, "<@%s>" % bot_id]
+        # make extra sure we do not reply infinite loop
+        # so ignore everything where the bot is the user
+        if 'hidden' in message:
+            if message['hidden']:
+                return False
+        if 'user' in message:
+            if message['user'] == bot_id:
+                return False
+        for matcher in matchers:
+            if message['text'].lower().startswith(matcher.lower()):
+                return True
+        try:
+            wildcards = settings.GOBBLE_BOT_ALIASES
+        except AttributeError:
+            wildcards = []
+        for wildcard in wildcards:
+            if message['text'].lower().find(wildcard) > 0:
+                return True
+        return False
 
 
 class Message():

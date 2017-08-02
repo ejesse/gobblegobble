@@ -50,14 +50,14 @@ class TestGobbleBot(TestCase):
 
         # better safe than sorry
         at_self_message = {'type': 'message', 'team': 'TFAKE123', 'user': bot.bot_id, 'text': '<@%s> hi' % bot.bot_id, 'channel': 'CFAKE123', 'ts': '1459619632.000033'}
-        self.assertTrue(bot.is_message_respondable(mention_message))
-        self.assertTrue(bot.is_message_respondable(mention_message_case))
-        self.assertTrue(bot.is_message_respondable(at_message))
-        self.assertFalse(bot.is_message_respondable(ignorable_message))
-        self.assertFalse(bot.is_message_respondable(self_message))
-        self.assertFalse(bot.is_message_respondable(at_self_message))
-        self.assertFalse(bot.is_message_respondable({'type':'message','hidden':True}))
-        self.assertFalse(bot.is_message_respondable(no_user_message))
+        self.assertTrue(bot.is_message_respondable(mention_message, bot.bot_name, bot.bot_id))
+        self.assertTrue(bot.is_message_respondable(mention_message_case, bot.bot_name, bot.bot_id))
+        self.assertTrue(bot.is_message_respondable(at_message, bot.bot_name, bot.bot_id))
+        self.assertFalse(bot.is_message_respondable(ignorable_message, bot.bot_name, bot.bot_id))
+        self.assertFalse(bot.is_message_respondable(self_message, bot.bot_name, bot.bot_id))
+        self.assertFalse(bot.is_message_respondable(at_self_message, bot.bot_name, bot.bot_id))
+        self.assertFalse(bot.is_message_respondable({'type':'message','hidden':True}, bot.bot_name, bot.bot_id))
+        self.assertFalse(bot.is_message_respondable(no_user_message, bot.bot_name, bot.bot_id))
 
     def test_is_explicit_at(self):
         bot = GobbleBot(api_token='faketoken')
