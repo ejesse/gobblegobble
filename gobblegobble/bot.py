@@ -85,11 +85,15 @@ class GobbleBot(metaclass=Singleton):
     def _actual_initialize(self, api_token=None):
 
         self.api_token = api_token
+        self.bot_loop_sleep_time = .001
         if self.api_token is None:
             if hasattr(settings, 'SLACKBOT_API_TOKEN'):
                 self.api_token = settings.SLACKBOT_API_TOKEN
         if self.api_token is None:
             raise ImproperlyConfigured("GobbleBot needs an API token, either GobbleBot(api_token='faketoken') or set SLACKBOT_API_TOKEN in django settings.")
+
+        if hasattr(settings, 'BOT_LOOP_SLEEP_TIME'):
+            self.bot_loop_sleep_time = settings.BOT_LOOP_SLEEP_TIME
 
         self.client = _get_slack_client()(self.api_token)
         LOGGER.info("Checking slack client")
@@ -106,7 +110,7 @@ class GobbleBot(metaclass=Singleton):
         else:
             LOGGER.error("Failed test connection to Slack RTM")
 
-    def listen(self, retry_number=0, sleep_interval=settings.BOT_LOOP_SLEEP_TIME):
+    def listen(self, retry_number=0):
         if retry_number > 0:
             # backoff retries, max of 5 minute intervals
             timetosleep = min(300, (2 ** retry_number)) + (random.randint(0,1000) / 1000.0)
@@ -122,7 +126,7 @@ class GobbleBot(metaclass=Singleton):
                     for event in self.client.rtm_read():
                         LOGGER.debug('New event from RTM: %s' % event)
                         self.handle_event(event)
-                    time.sleep(sleep_interval)
+                    time.sleep(self.bot_loop_sleep_time)
                 except:
                     traceback.print_exc()
                     LOGGER.error("Connection lost due to above error, trying to reconnect...")
