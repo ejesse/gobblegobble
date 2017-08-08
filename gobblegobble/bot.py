@@ -1,3 +1,4 @@
+from concurrent.futures.thread import ThreadPoolExecutor
 import importlib
 import json
 import logging
@@ -9,12 +10,12 @@ from threading import Thread
 import time
 import traceback
 
-from slackclient import SlackClient
-from websocket._exceptions import WebSocketConnectionClosedException
-
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from slackclient import SlackClient
+from websocket._exceptions import WebSocketConnectionClosedException
+
 from gobblegobble.exceptions import GobbleError
 from gobblegobble.mock_slackclient import MockSlackClient
 from gobblegobble.registry import RESPONSE_REGISTRY
@@ -86,6 +87,7 @@ class GobbleBot(metaclass=Singleton):
 
         self.api_token = api_token
         self.bot_loop_sleep_time = .001
+        self.num_worker_threads = 5
         if self.api_token is None:
             if hasattr(settings, 'SLACKBOT_API_TOKEN'):
                 self.api_token = settings.SLACKBOT_API_TOKEN
@@ -95,11 +97,17 @@ class GobbleBot(metaclass=Singleton):
         if hasattr(settings, 'BOT_LOOP_SLEEP_TIME'):
             self.bot_loop_sleep_time = settings.BOT_LOOP_SLEEP_TIME
 
+        if hasattr(settings, 'BOT_NUM_WORKER_THREADS'):
+            self.num_worker_threads = settings.BOT_NUM_WORKER_THREADS
+
         self.client = _get_slack_client()(self.api_token)
         LOGGER.info("Checking slack client")
         if self.client.rtm_connect():
             self.bot_name = self.client.server.login_data['self']['name']
             self.bot_id = self.client.server.login_data['self']['id']
+
+            # start worker pool
+            self.executor = ThreadPoolExecutor(max_workers=self.num_worker_threads)
 
             thread = Thread(target = self.listen)
             thread.setDaemon(True)
@@ -125,7 +133,7 @@ class GobbleBot(metaclass=Singleton):
                 try:
                     for event in self.client.rtm_read():
                         LOGGER.debug('New event from RTM: %s' % event)
-                        self.handle_event(event)
+                        self.executor.submit(self.handle_event, event)
                     time.sleep(self.bot_loop_sleep_time)
                 except:
                     traceback.print_exc()
