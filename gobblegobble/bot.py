@@ -150,12 +150,16 @@ class GobbleBot(metaclass=Singleton):
                     if GobbleBot.is_message_respondable(event, self.bot_name, self.bot_id):
                         message = Message(event)
                         LOGGER.info("Found respondable message %s, looking for matches..." % message.text)
+                        matched = False
                         for matcher in RESPONSE_REGISTRY.keys():
                             matches = matcher.match(message.text)
                             if matches is not None:
+                                matched = True
                                 LOGGER.info("Message matched: %s" % matcher)
                                 func = RESPONSE_REGISTRY[matcher]
                                 func(message, *matches.groups())
+                        if not matched:
+                            message.reply("Sorry, I don't understand \"%s\"" % message.text)
             else:
                 LOGGER.debug("Got an event from slack with no type??? Got: %s" % (event))
         except:
